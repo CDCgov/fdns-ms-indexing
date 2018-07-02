@@ -1,0 +1,83 @@
+{
+  "mongo": {
+    "database": "test",
+    "collection": "junit"
+  },
+  "elastic": {
+    "index": "test",
+    "type": "junit"
+  },
+  "mapping": {
+    "$unset": [
+      "_id",
+      "other.useless"
+    ],
+    "$set": {
+      "another.useless": {
+        "fields": [
+          "$.other.useless"
+        ],
+        "separator": ""
+      },
+       "start": {
+        "fields": [
+          "$.date"
+        ],
+        "separator": "",
+        "transform": {
+          "from": "date",
+          "format": "yyyyMMdd",
+          "to": "timestamp"
+        }
+      }
+    }
+  },
+  "filters": {
+    "val": {
+      "regex": "val:(\\w+)",
+      "regexGroup": 1,
+      "queryType": "multi_match",
+      "clause": "must",
+      "fields": [
+        "value"
+      ]
+    },
+    "start": {
+      "regex": "start:\\s?(\\w+-\\w+-\\w+)",
+      "regexGroup": 1,
+      "queryType": "range",
+      "operator": "gte",
+      "clause": "must",
+      "transform": {
+        "from": "date",
+        "format": "MM-dd-yyyy",
+        "to": "timestamp"
+      },
+      "field": "start"
+    },
+    "everything": {
+      "regex": null,
+      "queryType": "multi_match",
+      "clause": "filter",
+      "fields": [
+        "another.useless"
+      ]
+    },
+    "should": {
+      "regex": "(\\w+\\sOR\\s)+\\w+",
+      "regexGroup": 0,
+      "queryType": "multi_match",
+      "clause": "should",
+      "transform": {
+        "from": "string",
+        "to": "string",
+        "regex": " OR ",
+        "replacement": " "
+      },
+      "fields": [
+        "value"
+      ]
+    }
+  },
+  "appendToQuery": {}
+}
