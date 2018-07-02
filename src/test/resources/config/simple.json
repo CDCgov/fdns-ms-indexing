@@ -1,0 +1,34 @@
+{
+  "mongo": {
+    "database": "test",
+    "collection": "simple"
+  },
+  "elastic": {
+    "index": "test",
+    "type": "simple"
+  },
+  "mapping": {
+    "$unset": [
+      "_id"
+    ],
+    "$set": {
+      "foobar": {
+        "fields": [
+          "$.foo",
+          "$.bar"
+        ],
+        "separator": ""
+      }
+    }
+  },
+  "filters": {
+    "everything": {
+      "regex": null,
+      "queryType": "multi_match",
+      "clause": "filter",
+      "fields": [
+        "foobar"
+      ]
+    }
+  }
+}
