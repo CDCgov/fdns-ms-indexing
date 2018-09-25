@@ -33,7 +33,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>1.5.7.RELEASE</version>
+		<version>2.0.5.RELEASE</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 
@@ -41,14 +41,15 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 		<java.version>1.8</java.version>
-		<logger.version>0.3.2</logger.version>
+		<logger.version>0.3.3</logger.version>
 		<sonar.language>java</sonar.language>
 		<sonar.exclusions>src/main/java/gov/cdc/foundation/IndexingApplication.java</sonar.exclusions>
-		<tomcat.version>8.5.5</tomcat.version>
-		<elasticsearch.version>5.3.0</elasticsearch.version>
+		<elasticsearch.version>5.5.3</elasticsearch.version>
 		<timestamp>${maven.build.timestamp}</timestamp>
 		<maven.build.timestamp.format>yyyy-MM-dd HH:mm:ss</maven.build.timestamp.format>
-		<spring-cloud.version>Camden.SR7</spring-cloud.version>
+		<spring-cloud.version>Finchley.RELEASE</spring-cloud.version>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
 	</properties>
 
 	<dependencies>
@@ -76,11 +77,11 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>io.springfox</groupId>
 			<artifactId>springfox-swagger2</artifactId>
-			<version>2.8.0</version>
+			<version>2.9.2</version>
 		</dependency>
 
 		<dependency>
@@ -98,55 +99,75 @@
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
-			<version>2.3</version>
+			<version>2.6</version>
 		</dependency>
 
 		<dependency>
 			<groupId>com.jayway.jsonpath</groupId>
 			<artifactId>json-path</artifactId>
-			<version>2.2.0</version>
+			<version>2.4.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.json</groupId>
 			<artifactId>json</artifactId>
-			<version>20160810</version>
+			<version>20180813</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.elasticsearch.client</groupId>
 			<artifactId>rest</artifactId>
-			<version>5.3.0</version>
+			<version>5.5.3</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-api</artifactId>
-			<version>2.7</version>
+			<version>2.11.1</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-core</artifactId>
-			<version>2.7</version>
+			<version>2.11.1</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.jacoco</groupId>
 			<artifactId>jacoco-maven-plugin</artifactId>
-			<version>0.7.9</version>
+			<version>0.8.2</version>
+			<scope>test</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.mongodb</groupId>
 			<artifactId>mongodb-driver</artifactId>
-			<version>3.4.2</version>
+			<version>3.8.2</version>
 		</dependency>
-		
+
+		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>bson</artifactId>
+			<version>3.8.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongodb-driver-core</artifactId>
+			<version>3.8.2</version>
+		</dependency>
+
 		<dependency>
 			<groupId>gov.cdc</groupId>
 			<artifactId>fdns-java-sdk</artifactId>
-			<version>1.0.0</version>
+			<version>1.0.1</version>
+		</dependency>
+
+		<!-- dependency overrides from the dependency tree -->
+		<dependency>
+			<groupId>org.springframework.security.oauth.boot</groupId>
+			<artifactId>spring-security-oauth2-autoconfigure</artifactId>
+			<version>2.0.5.RELEASE</version>
 		</dependency>
 	</dependencies>
 
@@ -161,7 +182,7 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
-	
+
 	<build>
 		<plugins>
 			<plugin>
@@ -169,12 +190,11 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
 
-
 			<!-- JaCoCo configuration -->
 			<plugin>
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.7.9</version>
+				<version>0.8.2</version>
 				<executions>
 					<execution>
 						<id>default-prepare-agent</id>
@@ -191,8 +211,22 @@
 					</execution>
 				</executions>
 			</plugin>
+
+			<!-- OWASP dependency check, looks for known vulnerabilities in our dependent packages -->
+			<plugin>
+				<groupId>org.owasp</groupId>
+				<artifactId>dependency-check-maven</artifactId>
+				<version>3.3.2</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
-		
+
 		<resources>
 			<resource>
 				<directory>src/main/resources</directory>

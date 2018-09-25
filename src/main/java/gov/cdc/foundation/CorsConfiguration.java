@@ -20,7 +20,7 @@ public class CorsConfiguration {
 			}
 		};
 	}
-	
+
 	@Bean
 	public CorsFilter corsFilter() {
 		// Required after the update to the newest Springfox version that don't include it by default

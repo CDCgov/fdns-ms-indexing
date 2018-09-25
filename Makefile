@@ -20,6 +20,7 @@ docker-build:
 		.
 	docker-compose down
 
+docker-run: docker-start
 docker-start:
 	docker-compose up -d
 	docker run -d \

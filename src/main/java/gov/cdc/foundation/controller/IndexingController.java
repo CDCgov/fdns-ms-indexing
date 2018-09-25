@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import org.apache.commons.codec.Charsets;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.bson.types.ObjectId;
@@ -60,7 +61,7 @@ public class IndexingController {
 	private static final String CONST_MONGO_COLLECTION = "$.mongo.collection";
 	private static final String CONST_ELASTIC_INDEX = "$.elastic.index";
 	private static final String CONST_ELASTIC_TYPE = "$.elastic.type";
-	
+
 	private String configRegex;
 
 	public IndexingController(@Value("${config.regex}") String configRegex) {
@@ -71,9 +72,9 @@ public class IndexingController {
 	@ResponseBody
 	public ResponseEntity<?> index() throws IOException {
 		ObjectMapper mapper = new ObjectMapper();
-		
+
 		Map<String, Object> log = MessageHelper.initializeLog(MessageHelper.METHOD_INDEX, null);
-		
+
 		try {
 			JSONObject json = new JSONObject();
 			json.put("version", version);
@@ -81,7 +82,7 @@ public class IndexingController {
 		} catch (Exception e) {
 			logger.error(e);
 			LoggerHelper.log(MessageHelper.METHOD_INDEX, log);
-			
+
 			return ErrorHandler.getInstance().handle(e, log);
 		}
 	}
@@ -93,7 +94,7 @@ public class IndexingController {
 	@ResponseBody
 	public ResponseEntity<?> indexObject(
 			@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
-			@ApiParam(value = "Config Name") @PathVariable(value = "config") String configName, 
+			@ApiParam(value = "Config Name") @PathVariable(value = "config") String configName,
 			@ApiParam(value = "Object Id") @PathVariable(value = "id") String objectId) {
 
 		ObjectMapper mapper = new ObjectMapper();
@@ -133,7 +134,7 @@ public class IndexingController {
 
 			// Index the object
 			Response elkResponse = ElasticHelper.getInstance().index(object, index, type, objectId);
-			String elkResponseStr = IOUtils.toString(elkResponse.getEntity().getContent());
+			String elkResponseStr = IOUtils.toString(elkResponse.getEntity().getContent(), Charsets.UTF_8);
 			response.put("elk", new JSONObject(elkResponseStr));
 
 			return new ResponseEntity<>(mapper.readTree(response.toString()), HttpStatus.OK);
@@ -141,7 +142,7 @@ public class IndexingController {
 		} catch (Exception e) {
 			logger.error(e);
 			LoggerHelper.log(MessageHelper.METHOD_INDEXOBJECT, log);
-			
+
 			return ErrorHandler.getInstance().handle(e, log);
 		}
 	}
@@ -152,7 +153,7 @@ public class IndexingController {
 	@ResponseBody
 	public ResponseEntity<?> indexBulkObjects(
 			@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
-			@ApiParam(value = "Config Name") @PathVariable(value = "config") String configName, 
+			@ApiParam(value = "Config Name") @PathVariable(value = "config") String configName,
 			@ApiParam(value = "JSON array of object ids") @RequestBody String data) {
 
 		ObjectMapper mapper = new ObjectMapper();
@@ -206,7 +207,7 @@ public class IndexingController {
 		} catch (Exception e) {
 			logger.error(e);
 			LoggerHelper.log(MessageHelper.METHOD_INDEXOBJECT, log);
-			
+
 			return ErrorHandler.getInstance().handle(e, log);
 		}
 	}
@@ -224,7 +225,7 @@ public class IndexingController {
 		Map<String, Object> log = MessageHelper.initializeLog(MessageHelper.METHOD_INDEXALL, null);
 		log.put(MessageHelper.CONST_METHOD, MessageHelper.METHOD_INDEXALL);
 		log.put(MessageHelper.CONST_OBJECTTYPE, configName);
-		
+
 		logger.info("Test");
 
 		try {
@@ -264,7 +265,7 @@ public class IndexingController {
 		} catch (Exception e) {
 			logger.error(e);
 			LoggerHelper.log(MessageHelper.METHOD_INDEXOBJECT, log);
-			
+
 			return ErrorHandler.getInstance().handle(e, log);
 		}
 	}
@@ -272,7 +273,7 @@ public class IndexingController {
 	@Async
 	private void indexAll(String authorizationHeader, String database, String collection, String index, String type, JSONObject config) throws ServiceException, IOException {
 		ObjectHelper helper = ObjectHelper.getInstance(authorizationHeader);
-		
+
 		// Count all items in MongoDB
 		int nbOfItems = helper.countObjects(new JSONObject(), database, collection).getInt("count");
 		logger.debug("# of items: " + nbOfItems);
@@ -304,8 +305,8 @@ public class IndexingController {
 	@ResponseBody
 	public ResponseEntity<?> getObject(
 			@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
-			@ApiParam(value = "Config Name") @PathVariable(value = "config") String configName, 
-			@ApiParam(value = "Object Id") @PathVariable(value = "id") String objectId, 
+			@ApiParam(value = "Config Name") @PathVariable(value = "config") String configName,
+			@ApiParam(value = "Object Id") @PathVariable(value = "id") String objectId,
 			@ApiParam(value = "Hydrate") @RequestParam(value = "hydrate", required = false, defaultValue = "false") boolean hydrate) {
 
 		ObjectMapper mapper = new ObjectMapper();
@@ -328,7 +329,7 @@ public class IndexingController {
 				throw new ServiceException(MessageHelper.ERROR_NO_TYPE);
 
 			Response elkResponse = ElasticHelper.getInstance().getObject(index, type, objectId);
-			String elkResponseStr = IOUtils.toString(elkResponse.getEntity().getContent());
+			String elkResponseStr = IOUtils.toString(elkResponse.getEntity().getContent(), Charsets.UTF_8);
 
 			if (hydrate) {
 				String database = JsonPath.read(document, IndexingController.CONST_MONGO_DATABASE);
@@ -349,7 +350,7 @@ public class IndexingController {
 		} catch (Exception e) {
 			logger.error(e);
 			LoggerHelper.log(MessageHelper.METHOD_GETOBJECT, log);
-			
+
 			return ErrorHandler.getInstance().handle(e, log);
 		}
 	}
@@ -391,7 +392,7 @@ public class IndexingController {
 				append = config.getJSONObject("appendToQuery");
 
 			Response elkResponse = ElasticHelper.getInstance().searchObjects(index, queryObj, from, size, scroll, append);
-			String elkResponseStr = IOUtils.toString(elkResponse.getEntity().getContent());
+			String elkResponseStr = IOUtils.toString(elkResponse.getEntity().getContent(), Charsets.UTF_8);
 			JSONObject elkObject = new JSONObject(elkResponseStr);
 			elkObject.put("query", queryObj);
 
@@ -412,7 +413,7 @@ public class IndexingController {
 		} catch (Exception e) {
 			logger.error(e);
 			LoggerHelper.log(MessageHelper.METHOD_SEARCHOBJECT, log);
-			
+
 			return ErrorHandler.getInstance().handle(e, log);
 		}
 	}
@@ -438,7 +439,7 @@ public class IndexingController {
 			Object document = Configuration.defaultConfiguration().jsonProvider().parse(config.toString());
 
 			Response elkResponse = ElasticHelper.getInstance().scrollSearch(scrollId, scroll);
-			String elkResponseStr = IOUtils.toString(elkResponse.getEntity().getContent());
+			String elkResponseStr = IOUtils.toString(elkResponse.getEntity().getContent(), Charsets.UTF_8);
 			JSONObject elkObject = new JSONObject(elkResponseStr);
 
 			if (hydrate) {
@@ -457,7 +458,7 @@ public class IndexingController {
 		} catch (Exception e) {
 			logger.error(e);
 			LoggerHelper.log(MessageHelper.METHOD_SEARCHOBJECT, log);
-			
+
 			return ErrorHandler.getInstance().handle(e, log);
 		}
 	}
@@ -474,14 +475,14 @@ public class IndexingController {
 
 		try {
 			Response elkResponse = ElasticHelper.getInstance().deleteScrollIndex(scrollId);
-			String elkResponseStr = IOUtils.toString(elkResponse.getEntity().getContent());
+			String elkResponseStr = IOUtils.toString(elkResponse.getEntity().getContent(), Charsets.UTF_8);
 			JSONObject elkObject = new JSONObject(elkResponseStr);
 
 			return new ResponseEntity<>(mapper.readTree(elkObject.toString()), HttpStatus.OK);
 		} catch (Exception e) {
 			logger.error(e);
 			LoggerHelper.log(MessageHelper.METHOD_SEARCHOBJECT, log);
-			
+
 			return ErrorHandler.getInstance().handle(e, log);
 		}
 	}
@@ -514,13 +515,13 @@ public class IndexingController {
 				throw new ServiceException(MessageHelper.ERROR_NO_TYPE);
 
 			Response elkResponse = ElasticHelper.getInstance().defineMapping(index, type, new JSONObject(payload));
-			String elkResponseStr = IOUtils.toString(elkResponse.getEntity().getContent());
+			String elkResponseStr = IOUtils.toString(elkResponse.getEntity().getContent(), Charsets.UTF_8);
 
 			return new ResponseEntity<>(mapper.readTree(elkResponseStr), HttpStatus.OK);
 		} catch (Exception e) {
 			logger.error(e);
 			LoggerHelper.log(MessageHelper.METHOD_DEFINEMAPPING, log);
-			
+
 			return ErrorHandler.getInstance().handle(e, log);
 		}
 	}
@@ -549,13 +550,13 @@ public class IndexingController {
 				throw new ServiceException(MessageHelper.ERROR_NO_INDEX);
 
 			Response elkResponse = ElasticHelper.getInstance().createIndex(index);
-			String elkResponseStr = IOUtils.toString(elkResponse.getEntity().getContent());
+			String elkResponseStr = IOUtils.toString(elkResponse.getEntity().getContent(), Charsets.UTF_8);
 
 			return new ResponseEntity<>(mapper.readTree(elkResponseStr), HttpStatus.OK);
 		} catch (Exception e) {
 			logger.error(e);
 			LoggerHelper.log(MessageHelper.METHOD_CREATEINDEX, log);
-			
+
 			return ErrorHandler.getInstance().handle(e, log);
 		}
 	}
@@ -584,13 +585,13 @@ public class IndexingController {
 				throw new ServiceException(MessageHelper.ERROR_NO_INDEX);
 
 			Response elkResponse = ElasticHelper.getInstance().deleteIndex(index);
-			String elkResponseStr = IOUtils.toString(elkResponse.getEntity().getContent());
+			String elkResponseStr = IOUtils.toString(elkResponse.getEntity().getContent(), Charsets.UTF_8);
 
 			return new ResponseEntity<>(mapper.readTree(elkResponseStr), HttpStatus.OK);
 		} catch (Exception e) {
 			logger.error(e);
 			LoggerHelper.log(MessageHelper.METHOD_DELETEINDEX, log);
-			
+
 			return ErrorHandler.getInstance().handle(e, log);
 		}
 	}
@@ -612,7 +613,7 @@ public class IndexingController {
 	@ResponseBody
 	public ResponseEntity<?> upsertConfig(
 			@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
-			@RequestBody(required = true) String payload, 
+			@RequestBody(required = true) String payload,
 			@ApiParam(value = "Configuration name") @PathVariable(value = "config") String configName) {
 
 		ObjectMapper mapper = new ObjectMapper();
@@ -641,7 +642,7 @@ public class IndexingController {
 		} catch (Exception e) {
 			logger.error(e);
 			LoggerHelper.log(MessageHelper.METHOD_UPSERTCONFIG, log);
-			
+
 			return ErrorHandler.getInstance().handle(e, log);
 		}
 	}
@@ -667,7 +668,7 @@ public class IndexingController {
 		} catch (Exception e) {
 			logger.error(e);
 			LoggerHelper.log(MessageHelper.METHOD_GETCONFIG, log);
-			
+
 			return ErrorHandler.getInstance().handle(e, log);
 		}
 
@@ -696,7 +697,7 @@ public class IndexingController {
 		} catch (Exception e) {
 			logger.error(e);
 			LoggerHelper.log(MessageHelper.METHOD_DELETECONFIG, log);
-			
+
 			return ErrorHandler.getInstance().handle(e, log);
 		}
 
