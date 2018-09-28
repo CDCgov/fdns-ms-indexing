@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/CDCgov/fdns-ms-indexing.svg?branch=master)](https://travis-ci.org/CDCgov/fdns-ms-indexing)
+
 # FDNS Indexing Microservice
 This repository contains the indexing layer for the Data Lake. The indexing layer is also known as the navigation layer.
 
