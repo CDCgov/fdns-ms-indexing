@@ -96,25 +96,25 @@
     --data "@config.json"</code></pre>
       <p>Next you need to register the index with Elasticsearch:</p>
       <button class="btn" data-clipboard-target="#curl-cmd-pre-2">Copy</button>
-      <pre id="curl-cmd-pre-2"><code>curl -X PUT '<span class='origin'>http://127.0.0.1:8084/</span>index/[CONFIG]'</code></pre>
+      <pre id="curl-cmd-pre-2"><code>curl -X PUT '<span class='origin'>http://127.0.0.1:8084/</span>api/1.0/index/[CONFIG]'</code></pre>
       <p>When everything is configured, you can call the following URL to index an object (by using Swagger or <code>curl</code>):</p>
       <button class="btn" data-clipboard-target="#curl-cmd-1">Copy</button>
       <pre id="curl-cmd-1"><code>curl -X POST \
     --header 'Content-Type: application/json' \
     --header 'Accept: application/json' \
-    '<span class='origin'>http://127.0.0.1:8084/</span>index/[CONFIG]/[OBJECT ID]'</code></pre>
+    '<span class='origin'>http://127.0.0.1:8084/</span>api/1.0/index/[CONFIG]/[OBJECT ID]'</code></pre>
       <p>Where the value of <code>[CONFIG]</code> is defined in your config, and the <code>[OBJECT ID]</code> is the object identifier in the database.</p>
       <p>You can double check that your object is properly indexed with the following URL:<p>
       <button class="btn" data-clipboard-target="#curl-cmd-2">Copy</button>
       <pre id="curl-cmd-2"><code>curl -X GET \
     --header 'Accept: application/json' \
-    '<span class='origin'>http://127.0.0.1:8084/</span>get/[CONFIG]/[OBJECT ID]'</code></pre>
+    '<span class='origin'>http://127.0.0.1:8084/</span>api/1.0/get/[CONFIG]/[OBJECT ID]'</code></pre>
       <p>Finally, you can just search for all indexed objects in Elastic:</p>
       <button class="btn" data-clipboard-target="#curl-cmd-3">Copy</button>
       <pre id="curl-cmd-3"><code>curl -X POST \
     --header 'Content-Type: application/json' \
     --header 'Accept: application/json' \
-    '<span class='origin'>http://127.0.0.1:8084/</span>search/[CONFIG]'</code></pre>
+    '<span class='origin'>http://127.0.0.1:8084/</span>api/1.0/search/[CONFIG]'</code></pre>
     </section>
   </div>
   <script>

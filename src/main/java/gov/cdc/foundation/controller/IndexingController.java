@@ -598,7 +598,7 @@ public class IndexingController {
 
 	@PreAuthorize("!@authz.isSecured() or #oauth2.hasScope('indexing.'.concat(#configName)) or #config.startsWith('public-')")
 	@RequestMapping(value = "config/{config}", method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ApiOperation(value = "Create or update rules for the specified configuration", notes = "Create or update configuration")
+	@ApiOperation(value = "Create or update values for the specified configuration", notes = "Create or update configuration")
 	@ResponseBody
 	public ResponseEntity<?> upsertConfigWithPut(
 			@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
@@ -609,7 +609,7 @@ public class IndexingController {
 
 	@PreAuthorize("!@authz.isSecured() or #oauth2.hasScope('indexing.'.concat(#configName)) or #configName.startsWith('public-')")
 	@RequestMapping(value = "config/{config}", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ApiOperation(value = "Create or update rules for the specified configuration", notes = "Create or update configuration")
+	@ApiOperation(value = "Create or update values for the specified configuration", notes = "Create or update configuration")
 	@ResponseBody
 	public ResponseEntity<?> upsertConfig(
 			@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
