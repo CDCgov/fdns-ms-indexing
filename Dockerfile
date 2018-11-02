@@ -1,5 +1,5 @@
 # build stage
-FROM maven:3-jdk-8-slim as builder
+FROM maven:3.5.3-jdk-8 as builder
 
 ARG OBJECT_URL
 ARG INDEXING_PORT
