@@ -1,5 +1,5 @@
 # build stage
-FROM maven:3-jdk-8 as builder
+FROM maven:3.5.3-jdk-8 as builder
 
 ARG OBJECT_URL
 ARG INDEXING_PORT
@@ -14,8 +14,10 @@ ENV INDEXING_ELASTIC_PORT ${INDEXING_ELASTIC_PORT}
 ENV INDEXING_ELASTIC_PROTOCOL ${INDEXING_ELASTIC_PROTOCOL}
 
 RUN mkdir -p /usr/src/app
-COPY . /usr/src/app
+COPY pom.xml /usr/src/app
 WORKDIR /usr/src/app
+RUN mvn dependency:resolve
+COPY . /usr/src/app
 RUN mvn clean package
 
 # run stage
