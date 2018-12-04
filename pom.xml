@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>gov.cdc</groupId>
 	<artifactId>fdns-ms-indexing</artifactId>
-	<version>1.0.0</version>
+	<version>1.0.1</version>
 	<packaging>jar</packaging>
 
 	<name>FDNS Indexing Microservice</name>
@@ -119,7 +119,6 @@
 			<artifactId>rest</artifactId>
 			<version>5.5.3</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-api</artifactId>
@@ -131,7 +130,6 @@
 			<artifactId>log4j-core</artifactId>
 			<version>2.11.1</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.jacoco</groupId>
 			<artifactId>jacoco-maven-plugin</artifactId>
@@ -160,7 +158,7 @@
 		<dependency>
 			<groupId>gov.cdc</groupId>
 			<artifactId>fdns-java-sdk</artifactId>
-			<version>1.0.1</version>
+			<version>1.0.3</version>
 		</dependency>
 
 		<!-- dependency overrides from the dependency tree -->

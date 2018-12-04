@@ -41,6 +41,7 @@ import com.jayway.jsonpath.JsonPath;
 
 import gov.cdc.foundation.helper.ConfigurationHelper;
 import gov.cdc.helper.ObjectHelper;
+import org.springframework.web.client.HttpClientErrorException;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, properties = {
@@ -83,7 +84,7 @@ public class IndexingApplicationTests {
 
 		// Delete the collection
 		deleteCollection(config);
-		
+
 		// Create some items in the database
 		objectIds = new ArrayList<>();
 		for (int i = 0; i < NB_OF_ITEMS_TO_CREATE; i++) {
@@ -121,7 +122,14 @@ public class IndexingApplicationTests {
 		String database = JsonPath.read(document, "$.mongo.database");
 		String collection = JsonPath.read(document, "$.mongo.collection");
 
-		ObjectHelper.getInstance().deleteCollection(database, collection);
+		//if it's already been deleted we'll get a 404, so we'll absorb that exception
+		try {
+			ObjectHelper.getInstance().deleteCollection(database, collection);
+		}catch (HttpClientErrorException e){
+			if(!e.getStatusCode().equals(HttpStatus.NOT_FOUND)){
+				throw e;
+			}
+		}
 	}
 
 	@Test
@@ -142,17 +150,19 @@ public class IndexingApplicationTests {
 	public void manageIndexes() throws IOException {
 		// Delete index that does not exists
 		ResponseEntity<JsonNode> response = this.restTemplate.exchange(baseUrlPath + "/index/{type}", HttpMethod.DELETE, null, JsonNode.class, configurationProfileName);
+		//grab response from second run to make sure that the index doesn't exist
+		response = this.restTemplate.exchange(baseUrlPath + "/index/{type}", HttpMethod.DELETE, null, JsonNode.class, configurationProfileName);
 		JsonContent<JsonNode> body = this.json.write(response.getBody());
-		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 		assertThat(body).hasJsonPathBooleanValue("@.success");
 		assertThat(body).extractingJsonPathBooleanValue("@.success").isEqualTo(false);
-		assertThat(body).hasJsonPathStringValue("@.cause.error.reason");
-		assertThat(body).extractingJsonPathStringValue("@.cause.error.reason").isEqualTo("no such index");
+		assertThat(body).hasJsonPathStringValue("@.message");
+		assertThat(body).extractingJsonPathStringValue("@.message").isEqualTo("This index doesn't exist.");
 		
 		// Delete index with a wrong type
 		response = this.restTemplate.exchange(baseUrlPath + "/index/{type}", HttpMethod.DELETE, null, JsonNode.class, "_unknown_");
 		body = this.json.write(response.getBody());
-		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 		assertThat(body).hasJsonPathBooleanValue("@.success");
 		assertThat(body).extractingJsonPathBooleanValue("@.success").isEqualTo(false);
 		assertThat(body).hasJsonPathStringValue("@.message");
@@ -161,7 +171,7 @@ public class IndexingApplicationTests {
 		// Create index with a wrong type
 		response = this.restTemplate.exchange(baseUrlPath + "/index/{type}", HttpMethod.PUT, null, JsonNode.class, "_unknown_");
 		body = this.json.write(response.getBody());
-		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 		assertThat(body).hasJsonPathBooleanValue("@.success");
 		assertThat(body).extractingJsonPathBooleanValue("@.success").isEqualTo(false);
 		assertThat(body).hasJsonPathStringValue("@.message");
@@ -177,11 +187,11 @@ public class IndexingApplicationTests {
 		// Create index (a 2nd time)
 		response = this.restTemplate.exchange(baseUrlPath + "/index/{type}", HttpMethod.PUT, null, JsonNode.class, configurationProfileName);
 		body = this.json.write(response.getBody());
-		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
 		assertThat(body).hasJsonPathBooleanValue("@.success");
 		assertThat(body).extractingJsonPathBooleanValue("@.success").isEqualTo(false);
-		assertThat(body).hasJsonPathStringValue("@.cause.error.type");
-		assertThat(body).extractingJsonPathStringValue("@.cause.error.type").isEqualTo("index_already_exists_exception");
+		assertThat(body).hasJsonPathStringValue("@.message");
+		assertThat(body).extractingJsonPathStringValue("@.message").isEqualTo("This index already exists.");
 		
 		// Delete index 
 		response = this.restTemplate.exchange(baseUrlPath + "/index/{type}", HttpMethod.DELETE, null, JsonNode.class, configurationProfileName);
@@ -193,11 +203,11 @@ public class IndexingApplicationTests {
 		// Delete index (a 2nd time)
 		response = this.restTemplate.exchange(baseUrlPath + "/index/{type}", HttpMethod.DELETE, null, JsonNode.class, configurationProfileName);
 		body = this.json.write(response.getBody());
-		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 		assertThat(body).hasJsonPathBooleanValue("@.success");
 		assertThat(body).extractingJsonPathBooleanValue("@.success").isEqualTo(false);
-		assertThat(body).hasJsonPathStringValue("@.cause.error.type");
-		assertThat(body).extractingJsonPathStringValue("@.cause.error.type").isEqualTo("index_not_found_exception");
+		assertThat(body).hasJsonPathStringValue("@.message");
+		assertThat(body).extractingJsonPathStringValue("@.message").isEqualTo("This index doesn't exist.");
 	}
 	
 	@Test
@@ -216,16 +226,16 @@ public class IndexingApplicationTests {
 		// Create mapping without index
 		ResponseEntity<JsonNode> response = this.restTemplate.exchange(baseUrlPath + "/mapping/{type}", HttpMethod.POST, emptyMappingPayload, JsonNode.class, configurationProfileName);
 		JsonContent<JsonNode> body = this.json.write(response.getBody());
-		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 		assertThat(body).hasJsonPathBooleanValue("@.success");
 		assertThat(body).extractingJsonPathBooleanValue("@.success").isEqualTo(false);
-		assertThat(body).hasJsonPathStringValue("@.cause.error.type");
-		assertThat(body).extractingJsonPathStringValue("@.cause.error.type").isEqualTo("index_not_found_exception");
+		assertThat(body).hasJsonPathStringValue("@.message");
+		assertThat(body).extractingJsonPathStringValue("@.message").isEqualTo("This index doesn't exist.");
 		
 		// Create mapping with a wrong type
 		response = this.restTemplate.exchange(baseUrlPath + "/mapping/{type}", HttpMethod.POST, emptyMappingPayload, JsonNode.class,  "_unknown_");
 		body = this.json.write(response.getBody());
-		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 		assertThat(body).hasJsonPathBooleanValue("@.success");
 		assertThat(body).extractingJsonPathBooleanValue("@.success").isEqualTo(false);
 		assertThat(body).hasJsonPathStringValue("@.message");
@@ -244,13 +254,13 @@ public class IndexingApplicationTests {
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
 		assertThat(body).hasJsonPathBooleanValue("@.success");
 		assertThat(body).extractingJsonPathBooleanValue("@.success").isEqualTo(false);
-		assertThat(body).hasJsonPathStringValue("@.cause.error.type");
-		assertThat(body).extractingJsonPathStringValue("@.cause.error.type").isEqualTo("mapper_parsing_exception");
+		assertThat(body).hasJsonPathStringValue("@.message");
+		assertThat(body).extractingJsonPathStringValue("@.message").isEqualTo("malformed mapping no root object found");
 		
 		// Create mapping
 		response = this.restTemplate.exchange(baseUrlPath + "/mapping/{type}", HttpMethod.POST, validMappingPayload, JsonNode.class, configurationProfileName);
 		body = this.json.write(response.getBody());
-		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 		assertThat(body).hasJsonPathBooleanValue("@.acknowledged");
 		assertThat(body).extractingJsonPathBooleanValue("@.acknowledged").isEqualTo(true);
 		
@@ -260,8 +270,8 @@ public class IndexingApplicationTests {
 		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
 		assertThat(body).hasJsonPathBooleanValue("@.success");
 		assertThat(body).extractingJsonPathBooleanValue("@.success").isEqualTo(false);
-		assertThat(body).hasJsonPathStringValue("@.cause.error.type");
-		assertThat(body).extractingJsonPathStringValue("@.cause.error.type").isEqualTo("illegal_argument_exception");
+		assertThat(body).hasJsonPathStringValue("@.message");
+		assertThat(body).extractingJsonPathStringValue("@.message").isEqualTo("mapper [value] of different type, current_type [text], merged_type [date]");
 
 		// Delete index 
 		response = this.restTemplate.exchange(baseUrlPath + "/index/{type}", HttpMethod.DELETE, null, JsonNode.class, configurationProfileName);
@@ -276,7 +286,7 @@ public class IndexingApplicationTests {
 		// Index object with a wrong type
 		ResponseEntity<JsonNode> response = this.restTemplate.exchange(baseUrlPath + "/index/{type}/{id}", HttpMethod.POST, null, JsonNode.class, "_unknown_", "_unknown_");
 		JsonContent<JsonNode> body = this.json.write(response.getBody());
-		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 		assertThat(body).hasJsonPathBooleanValue("@.success");
 		assertThat(body).extractingJsonPathBooleanValue("@.success").isEqualTo(false);
 		assertThat(body).hasJsonPathStringValue("@.message");
@@ -285,7 +295,7 @@ public class IndexingApplicationTests {
 		// Index object with a wrong id
 		response = this.restTemplate.exchange(baseUrlPath + "/index/{type}/{id}", HttpMethod.POST, null, JsonNode.class, configurationProfileName, "_unknown_");
 		body = this.json.write(response.getBody());
-		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 		assertThat(body).hasJsonPathBooleanValue("@.success");
 		assertThat(body).extractingJsonPathBooleanValue("@.success").isEqualTo(false);
 		assertThat(body).hasJsonPathStringValue("@.message");
@@ -296,7 +306,7 @@ public class IndexingApplicationTests {
 			String id = String.format("%02d", i);
 			response = this.restTemplate.exchange(baseUrlPath + "/index/{type}/{id}", HttpMethod.POST, null, JsonNode.class, configurationProfileName, id);
 			body = this.json.write(response.getBody());
-			assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+			assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 			assertThat(body).hasJsonPathBooleanValue("@.elk.created");
 			assertThat(body).extractingJsonPathBooleanValue("@.elk.created").isEqualTo(true);
 			assertThat(body).hasJsonPathNumberValue("@.elk._version");
@@ -312,7 +322,7 @@ public class IndexingApplicationTests {
 			String id = String.format("%02d", i);
 			response = this.restTemplate.exchange(baseUrlPath + "/index/{type}/{id}", HttpMethod.POST, null, JsonNode.class, configurationProfileName, id);
 			body = this.json.write(response.getBody());
-			assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+			assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
 			assertThat(body).hasJsonPathBooleanValue("@.elk.created");
 			assertThat(body).extractingJsonPathBooleanValue("@.elk.created").isEqualTo(false);
 			assertThat(body).hasJsonPathNumberValue("@.elk._version");
@@ -346,7 +356,7 @@ public class IndexingApplicationTests {
 		// Search object with a wrong type
 		response = this.restTemplate.exchange(baseUrlPath + "/search/{type}", HttpMethod.POST, null, JsonNode.class, "_unknown_");
 		body = this.json.write(response.getBody());
-		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+		assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
 		assertThat(body).hasJsonPathBooleanValue("@.success");
 		assertThat(body).extractingJsonPathBooleanValue("@.success").isEqualTo(false);
 		assertThat(body).hasJsonPathStringValue("@.message");
