@@ -98,7 +98,14 @@ public class IndexingController {
 	}
 
 
-	@PreAuthorize("!@authz.isSecured() or #oauth2.hasScope('indexing.'.concat(#configName))")
+	@PreAuthorize(
+		"!@authz.isSecured()"
+		+ " or #configName.startsWith('public-')"
+		+ " or #oauth2.hasScope('fdns.indexing.'.concat(#configName).concat('.create'))"
+		+ " or #oauth2.hasScope('fdns.indexing.'.concat(#configName).concat('.*'))"
+		+ " or #oauth2.hasScope('fdns.indexing.*.create')" 
+		+ " or #oauth2.hasScope('fdns.indexing.*.*')"
+	)
 	@RequestMapping(value = "index/{config}/{id}", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Index an existing stored object.", notes = "Index an existing stored object.")
 	@ApiResponses(value = {
@@ -110,12 +117,11 @@ public class IndexingController {
 	})
 	@ResponseBody
 	public ResponseEntity<?> indexObject(
-			@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
-			@ApiParam(value = "Config Name") @PathVariable(value = "config") String configName,
-			@ApiParam(value = "Object Id") @PathVariable(value = "id") String objectId) {
-
+		@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+		@ApiParam(value = "Config Name") @PathVariable(value = "config") String configName,
+		@ApiParam(value = "Object Id") @PathVariable(value = "id") String objectId
+	) {
 		ObjectMapper mapper = new ObjectMapper();
-
 		Map<String, Object> log = MessageHelper.initializeLog(MessageHelper.METHOD_INDEXOBJECT, null);
 		log.put(MessageHelper.CONST_METHOD, MessageHelper.METHOD_INDEXOBJECT);
 		log.put(MessageHelper.CONST_OBJECTTYPE, configName);
@@ -169,8 +175,20 @@ public class IndexingController {
 		}
 	}
 
-	@PreAuthorize("!@authz.isSecured() or #oauth2.hasScope('indexing.'.concat(#configName))")
-	@RequestMapping(value = "index/bulk/{config}", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+	@PreAuthorize(
+		"!@authz.isSecured()"
+		+ " or #configName.startsWith('public-')"
+		+ " or #oauth2.hasScope('fdns.indexing.'.concat(#configName).concat('.create'))"
+		+ " or #oauth2.hasScope('fdns.indexing.'.concat(#configName).concat('.*'))"
+		+ " or #oauth2.hasScope('fdns.indexing.*.create')" 
+		+ " or #oauth2.hasScope('fdns.indexing.*.*')"
+	)
+	@RequestMapping(
+		value = "index/bulk/{config}",
+		method = RequestMethod.POST,
+		produces = MediaType.APPLICATION_JSON_VALUE,
+		consumes = MediaType.APPLICATION_JSON_VALUE
+	)
 	@ApiOperation(value = "Index a list of objects.", notes = "Index a list of objects.")
 	@ApiResponses(value = {
 			@ApiResponse(code = 201, message = "Index created"),
@@ -182,12 +200,11 @@ public class IndexingController {
 	})
 	@ResponseBody
 	public ResponseEntity<?> indexBulkObjects(
-			@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
-			@ApiParam(value = "Config Name") @PathVariable(value = "config") String configName,
-			@ApiParam(value = "JSON array of object ids") @RequestBody String data) {
-
+		@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+		@ApiParam(value = "Config Name") @PathVariable(value = "config") String configName,
+		@ApiParam(value = "JSON array of object ids") @RequestBody String data
+	) {
 		ObjectMapper mapper = new ObjectMapper();
-
 		Map<String, Object> log = MessageHelper.initializeLog(MessageHelper.METHOD_INDEXBULKOBJECTS, null);
 		log.put(MessageHelper.CONST_METHOD, MessageHelper.METHOD_INDEXBULKOBJECTS);
 		log.put(MessageHelper.CONST_OBJECTTYPE, configName);
@@ -251,7 +268,14 @@ public class IndexingController {
 		}
 	}
 
-	@PreAuthorize("!@authz.isSecured() or #oauth2.hasScope('indexing.'.concat(#configName))")
+	@PreAuthorize(
+		"!@authz.isSecured()"
+		+ " or #configName.startsWith('public-')"
+		+ " or #oauth2.hasScope('fdns.indexing.'.concat(#configName).concat('.create'))"
+		+ " or #oauth2.hasScope('fdns.indexing.'.concat(#configName).concat('.*'))"
+		+ " or #oauth2.hasScope('fdns.indexing.*.create')" 
+		+ " or #oauth2.hasScope('fdns.indexing.*.*')"
+	)
 	@RequestMapping(value = "index/all/{config}", method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_VALUE)
 	@ApiOperation(value = "Index all objects in MongoDB.", notes = "Index all objects in MongoDB.")
 	@ApiResponses(value = {
@@ -263,11 +287,10 @@ public class IndexingController {
 	})
 	@ResponseBody
 	public ResponseEntity<?> indexAll(
-			@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
-			@ApiParam(value = "Config Name") @PathVariable(value = "config") String configName) {
-
+		@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+		@ApiParam(value = "Config Name") @PathVariable(value = "config") String configName
+	) {
 		ObjectMapper mapper = new ObjectMapper();
-
 		Map<String, Object> log = MessageHelper.initializeLog(MessageHelper.METHOD_INDEXALL, null);
 		log.put(MessageHelper.CONST_METHOD, MessageHelper.METHOD_INDEXALL);
 		log.put(MessageHelper.CONST_OBJECTTYPE, configName);
@@ -320,7 +343,14 @@ public class IndexingController {
 	}
 
 	@Async
-	private void indexAll(String authorizationHeader, String database, String collection, String index, String type, JSONObject config) throws ServiceException, IOException {
+	private void indexAll(
+		String authorizationHeader,
+		String database,
+		String collection,
+		String index,
+		String type,
+		JSONObject config
+	) throws ServiceException, IOException {
 		ObjectHelper helper = ObjectHelper.getInstance(authorizationHeader);
 
 		// Count all items in MongoDB
@@ -348,8 +378,19 @@ public class IndexingController {
 		}
 	}
 
-	@PreAuthorize("!@authz.isSecured() or #oauth2.hasScope('indexing.'.concat(#configName))")
-	@RequestMapping(value = "get/{config}/{id}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+	@PreAuthorize(
+		"!@authz.isSecured()"
+		+ " or #configName.startsWith('public-')"
+		+ " or #oauth2.hasScope('fdns.indexing.'.concat(#configName).concat('.read'))"
+		+ " or #oauth2.hasScope('fdns.indexing.'.concat(#configName).concat('.*'))"
+		+ " or #oauth2.hasScope('fdns.indexing.*.read')" 
+		+ " or #oauth2.hasScope('fdns.indexing.*.*')"
+	)
+	@RequestMapping(
+		value = "get/{config}/{id}",
+		method = RequestMethod.GET,
+		produces = MediaType.APPLICATION_JSON_VALUE
+	)
 	@ApiOperation(value = "Get an indexed object.", notes = "Get an indexed object.")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Returns object"),
@@ -360,13 +401,12 @@ public class IndexingController {
 	})
 	@ResponseBody
 	public ResponseEntity<?> getObject(
-			@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
-			@ApiParam(value = "Config Name") @PathVariable(value = "config") String configName,
-			@ApiParam(value = "Object Id") @PathVariable(value = "id") String objectId,
-			@ApiParam(value = "Hydrate") @RequestParam(value = "hydrate", required = false, defaultValue = "false") boolean hydrate) {
-
+		@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+		@ApiParam(value = "Config Name") @PathVariable(value = "config") String configName,
+		@ApiParam(value = "Object Id") @PathVariable(value = "id") String objectId,
+		@ApiParam(value = "Hydrate") @RequestParam(value = "hydrate", required = false, defaultValue = "false") boolean hydrate
+	) {
 		ObjectMapper mapper = new ObjectMapper();
-
 		Map<String, Object> log = MessageHelper.initializeLog(MessageHelper.METHOD_GETOBJECT, null);
 		log.put(MessageHelper.CONST_METHOD, MessageHelper.METHOD_GETOBJECT);
 		log.put(MessageHelper.CONST_OBJECTTYPE, configName);
@@ -418,8 +458,19 @@ public class IndexingController {
 		}
 	}
 
-	@PreAuthorize("!@authz.isSecured() or #oauth2.hasScope('indexing.'.concat(#configName))")
-	@RequestMapping(value = "search/{config}", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+	@PreAuthorize(
+		"!@authz.isSecured()"
+		+ " or #configName.startsWith('public-')"
+		+ " or #oauth2.hasScope('fdns.indexing.'.concat(#configName).concat('.read'))"
+		+ " or #oauth2.hasScope('fdns.indexing.'.concat(#configName).concat('.*'))"
+		+ " or #oauth2.hasScope('fdns.indexing.*.read')" 
+		+ " or #oauth2.hasScope('fdns.indexing.*.*')"
+	)
+	@RequestMapping(
+		value = "search/{config}",
+		method = RequestMethod.POST,
+		produces = MediaType.APPLICATION_JSON_VALUE
+	)
 	@ApiOperation(value = "Search object.", notes = "Search indexed object.")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Returns objects"),
@@ -430,16 +481,15 @@ public class IndexingController {
 	})
 	@ResponseBody
 	public ResponseEntity<?> searchObjects(
-			@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
-			@ApiParam(value = "Config Name") @PathVariable(value = "config") String configName,
-			@ApiParam(value = "Search query") @RequestParam(value = "query", required = false) String query,
-			@ApiParam(value = "Hydrate") @RequestParam(value = "hydrate", required = false, defaultValue = "false") boolean hydrate,
-			@ApiParam(value = "From") @RequestParam(value = "from", required = false, defaultValue = "0") int from,
-			@ApiParam(value = "Size") @RequestParam(value = "size", required = false, defaultValue = "100") int size,
-			@ApiParam(value = "Scroll live time (like 1m)") @RequestParam(value = "scroll", required = false, defaultValue = "") String scroll) {
-
+		@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+		@ApiParam(value = "Config Name") @PathVariable(value = "config") String configName,
+		@ApiParam(value = "Search query") @RequestParam(value = "query", required = false) String query,
+		@ApiParam(value = "Hydrate") @RequestParam(value = "hydrate", required = false, defaultValue = "false") boolean hydrate,
+		@ApiParam(value = "From") @RequestParam(value = "from", required = false, defaultValue = "0") int from,
+		@ApiParam(value = "Size") @RequestParam(value = "size", required = false, defaultValue = "100") int size,
+		@ApiParam(value = "Scroll live time (like 1m)") @RequestParam(value = "scroll", required = false, defaultValue = "") String scroll
+	) {
 		ObjectMapper mapper = new ObjectMapper();
-
 		Map<String, Object> log = MessageHelper.initializeLog(MessageHelper.METHOD_SEARCHOBJECT, null);
 		log.put(MessageHelper.CONST_METHOD, MessageHelper.METHOD_SEARCHOBJECT);
 		log.put(MessageHelper.CONST_OBJECTTYPE, configName);
@@ -501,8 +551,19 @@ public class IndexingController {
 		}
 	}
 
-	@PreAuthorize("!@authz.isSecured() or #oauth2.hasScope('indexing.'.concat(#configName))")
-	@RequestMapping(value = "search/scroll/{config}", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+	@PreAuthorize(
+		"!@authz.isSecured()"
+		+ " or #configName.startsWith('public-')"
+		+ " or #oauth2.hasScope('fdns.indexing.'.concat(#configName).concat('.read'))"
+		+ " or #oauth2.hasScope('fdns.indexing.'.concat(#configName).concat('.*'))"
+		+ " or #oauth2.hasScope('fdns.indexing.*.read')" 
+		+ " or #oauth2.hasScope('fdns.indexing.*.*')"
+	)
+	@RequestMapping(
+		value = "search/scroll/{config}",
+		method = RequestMethod.POST,
+		produces = MediaType.APPLICATION_JSON_VALUE
+	)
 	@ApiOperation(value = "Scroll search result.", notes = "Scroll search result.")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Returns result"),
@@ -514,14 +575,13 @@ public class IndexingController {
 	})
 	@ResponseBody
 	public ResponseEntity<?> scrollSearch(
-			@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
-			@ApiParam(value = "Config Name") @PathVariable(value = "config") String configName,
-			@ApiParam(value = "Scroll live time (like 1m)") @RequestParam(value = "scroll", required = true, defaultValue = "1m") String scroll,
-			@ApiParam(value = "Scroll identifier") @RequestParam(value = "scrollId", required = true, defaultValue = "") String scrollId,
-			@ApiParam(value = "Hydrate") @RequestParam(value = "hydrate", required = false, defaultValue = "false") boolean hydrate) {
-
+		@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+		@ApiParam(value = "Config Name") @PathVariable(value = "config") String configName,
+		@ApiParam(value = "Scroll live time (like 1m)") @RequestParam(value = "scroll", required = true, defaultValue = "1m") String scroll,
+		@ApiParam(value = "Scroll identifier") @RequestParam(value = "scrollId", required = true, defaultValue = "") String scrollId,
+		@ApiParam(value = "Hydrate") @RequestParam(value = "hydrate", required = false, defaultValue = "false") boolean hydrate
+	) {
 		ObjectMapper mapper = new ObjectMapper();
-
 		Map<String, Object> log = MessageHelper.initializeLog(MessageHelper.METHOD_SCROLL, null);
 		log.put(MessageHelper.CONST_METHOD, MessageHelper.METHOD_SCROLL);
 
@@ -564,7 +624,11 @@ public class IndexingController {
 		}
 	}
 
-	@RequestMapping(value = "search/scroll", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@RequestMapping(
+		value = "search/scroll",
+		method = RequestMethod.DELETE,
+		produces = MediaType.APPLICATION_JSON_VALUE
+	)
 	@ApiOperation(value = "Delete Scroll Index.", notes = "Delete Scroll Index.")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Index deleted"),
@@ -575,10 +639,10 @@ public class IndexingController {
 			@ApiResponse(code = 422, message = "Parameter(s) missing or invalid")
 	})
 	@ResponseBody
-	public ResponseEntity<?> deleteScrollIndex(@ApiParam(value = "Scroll identifier") @RequestParam(value = "scrollId", required = true, defaultValue = "") String scrollId) {
-
+	public ResponseEntity<?> deleteScrollIndex(
+		@ApiParam(value = "Scroll identifier") @RequestParam(value = "scrollId", required = true, defaultValue = "") String scrollId
+	) {
 		ObjectMapper mapper = new ObjectMapper();
-
 		Map<String, Object> log = MessageHelper.initializeLog(MessageHelper.METHOD_SCROLL, null);
 		log.put(MessageHelper.CONST_METHOD, MessageHelper.METHOD_SCROLL);
 
@@ -601,8 +665,19 @@ public class IndexingController {
 		}
 	}
 
-	@PreAuthorize("!@authz.isSecured() or #oauth2.hasScope('indexing.'.concat(#configName))")
-	@RequestMapping(value = "mapping/{config}", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+	@PreAuthorize(
+		"!@authz.isSecured()"
+		+ " or #configName.startsWith('public-')"
+		+ " or #oauth2.hasScope('fdns.indexing.'.concat(#configName).concat('.create'))"
+		+ " or #oauth2.hasScope('fdns.indexing.'.concat(#configName).concat('.*'))"
+		+ " or #oauth2.hasScope('fdns.indexing.*.create')" 
+		+ " or #oauth2.hasScope('fdns.indexing.*.*')"
+	)
+	@RequestMapping(
+		value = "mapping/{config}",
+		method = RequestMethod.POST,
+		produces = MediaType.APPLICATION_JSON_VALUE
+	)
 	@ApiOperation(value = "Define a mapping in elasticsearch.", notes = "Define a mapping in elasticsearch.")
 	@ApiResponses(value = {
 			@ApiResponse(code = 201, message = "Mapping created"),
@@ -613,12 +688,11 @@ public class IndexingController {
 	})
 	@ResponseBody
 	public ResponseEntity<?> defineMapping(
-			@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
-			@RequestBody String payload,
-			@ApiParam(value = "Config Name") @PathVariable(value = "config") String configName) {
-
+		@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+		@RequestBody String payload,
+		@ApiParam(value = "Config Name") @PathVariable(value = "config") String configName
+	) {
 		ObjectMapper mapper = new ObjectMapper();
-
 		Map<String, Object> log = MessageHelper.initializeLog(MessageHelper.METHOD_DEFINEMAPPING, null);
 		log.put(MessageHelper.CONST_METHOD, MessageHelper.METHOD_DEFINEMAPPING);
 		log.put(MessageHelper.CONST_OBJECTTYPE, configName);
@@ -661,8 +735,19 @@ public class IndexingController {
 		}
 	}
 
-	@PreAuthorize("!@authz.isSecured() or #oauth2.hasScope('indexing.'.concat(#configName))")
-	@RequestMapping(value = "index/{config}", method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_VALUE)
+	@PreAuthorize(
+		"!@authz.isSecured()"
+		+ " or #configName.startsWith('public-')"
+		+ " or #oauth2.hasScope('fdns.indexing.'.concat(#configName).concat('.create'))"
+		+ " or #oauth2.hasScope('fdns.indexing.'.concat(#configName).concat('.*'))"
+		+ " or #oauth2.hasScope('fdns.indexing.*.create')" 
+		+ " or #oauth2.hasScope('fdns.indexing.*.*')"
+	)
+	@RequestMapping(
+		value = "index/{config}",
+		method = RequestMethod.PUT,
+		produces = MediaType.APPLICATION_JSON_VALUE
+	)
 	@ApiOperation(value = "Creates a new index.", notes = "Creates a new index.")
 	@ApiResponses(value = {
 			@ApiResponse(code = 201, message = "Index created"),
@@ -674,11 +759,10 @@ public class IndexingController {
 	})
 	@ResponseBody
 	public ResponseEntity<?> createIndex(
-			@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
-			@ApiParam(value = "Config Name") @PathVariable(value = "config") String configName) {
-
+		@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+		@ApiParam(value = "Config Name") @PathVariable(value = "config") String configName
+	) {
 		ObjectMapper mapper = new ObjectMapper();
-
 		Map<String, Object> log = MessageHelper.initializeLog(MessageHelper.METHOD_CREATEINDEX, null);
 		log.put(MessageHelper.CONST_METHOD, MessageHelper.METHOD_CREATEINDEX);
 		log.put(MessageHelper.CONST_OBJECTTYPE, configName);
@@ -720,8 +804,18 @@ public class IndexingController {
 		}
 	}
 
-	@PreAuthorize("!@authz.isSecured() or #oauth2.hasScope('indexing.'.concat(#configName))")
-	@RequestMapping(value = "index/{config}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@PreAuthorize(
+		"!@authz.isSecured()"
+		+ " or #oauth2.hasScope('fdns.indexing.'.concat(#configName).concat('.delete'))"
+		+ " or #oauth2.hasScope('fdns.indexing.'.concat(#configName).concat('.*'))"
+		+ " or #oauth2.hasScope('fdns.indexing.*.delete')" 
+		+ " or #oauth2.hasScope('fdns.indexing.*.*')"
+	)
+	@RequestMapping(
+		value = "index/{config}",
+		method = RequestMethod.DELETE,
+		produces = MediaType.APPLICATION_JSON_VALUE
+	)
 	@ApiOperation(value = "Delete index.", notes = "Delete index.")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Index Deleted"),
@@ -732,11 +826,10 @@ public class IndexingController {
 	})
 	@ResponseBody
 	public ResponseEntity<?> delete(
-			@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
-			@ApiParam(value = "Config Name") @PathVariable(value = "config") String configName) {
-
+		@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+		@ApiParam(value = "Config Name") @PathVariable(value = "config") String configName
+	) {
 		ObjectMapper mapper = new ObjectMapper();
-
 		Map<String, Object> log = MessageHelper.initializeLog(MessageHelper.METHOD_DELETEINDEX, null);
 		log.put(MessageHelper.CONST_METHOD, MessageHelper.METHOD_DELETEINDEX);
 		log.put(MessageHelper.CONST_OBJECTTYPE, configName);
@@ -776,8 +869,21 @@ public class IndexingController {
 		}
 	}
 
-	@PreAuthorize("!@authz.isSecured() or #oauth2.hasScope('indexing.'.concat(#configName)) or #config.startsWith('public-')")
-	@RequestMapping(value = "config/{config}", method = RequestMethod.PUT, produces = MediaType.APPLICATION_JSON_VALUE)
+	@PreAuthorize(
+		"!@authz.isSecured()"
+		+ " or #configName.startsWith('public-')"
+		+ " or #oauth2.hasScope('fdns.indexing.'.concat(#configName).concat('.create'))"
+		+ " or #oauth2.hasScope('fdns.indexing.'.concat(#configName).concat('.update'))"
+		+ " or #oauth2.hasScope('fdns.indexing.'.concat(#configName).concat('.*'))"
+		+ " or #oauth2.hasScope('fdns.indexing.*.create')" 
+		+ " or #oauth2.hasScope('fdns.indexing.*.update')" 
+		+ " or #oauth2.hasScope('fdns.indexing.*.*')"
+	)
+	@RequestMapping(
+		value = "config/{config}",
+		method = RequestMethod.PUT,
+		produces = MediaType.APPLICATION_JSON_VALUE
+	)
 	@ApiOperation(value = "Create or update values for the specified configuration", notes = "Create or update configuration")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Configuration updated"),
@@ -789,15 +895,32 @@ public class IndexingController {
 	})
 	@ResponseBody
 	public ResponseEntity<?> upsertConfigWithPut(
-			@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
-			@RequestBody(required = true) String payload,
-			@ApiParam(value = "Configuration name") @PathVariable(value = "config") String configName) {
+		@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+		@RequestBody(required = true) String payload,
+		@ApiParam(value = "Configuration name") @PathVariable(value = "config") String configName
+	) {
 		return upsertConfig(authorizationHeader, payload, configName);
 	}
 
-	@PreAuthorize("!@authz.isSecured() or #oauth2.hasScope('indexing.'.concat(#configName)) or #configName.startsWith('public-')")
-	@RequestMapping(value = "config/{config}", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-	@ApiOperation(value = "Create or update values for the specified configuration", notes = "Create or update configuration")
+	@PreAuthorize(
+		"!@authz.isSecured()"
+		+ " or #configName.startsWith('public-')"
+		+ " or #oauth2.hasScope('fdns.indexing.'.concat(#configName).concat('.create'))"
+		+ " or #oauth2.hasScope('fdns.indexing.'.concat(#configName).concat('.update'))"
+		+ " or #oauth2.hasScope('fdns.indexing.'.concat(#configName).concat('.*'))"
+		+ " or #oauth2.hasScope('fdns.indexing.*.create')" 
+		+ " or #oauth2.hasScope('fdns.indexing.*.update')" 
+		+ " or #oauth2.hasScope('fdns.indexing.*.*')"
+	)
+	@RequestMapping(
+		value = "config/{config}",
+		method = RequestMethod.POST,
+		produces = MediaType.APPLICATION_JSON_VALUE
+	)
+	@ApiOperation(
+		value = "Create or update values for the specified configuration",
+		notes = "Create or update configuration"
+	)
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Configuration updated"),
 			@ApiResponse(code = 201, message = "Configuration created"),
@@ -808,10 +931,10 @@ public class IndexingController {
 	})
 	@ResponseBody
 	public ResponseEntity<?> upsertConfig(
-			@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
-			@RequestBody(required = true) String payload,
-			@ApiParam(value = "Configuration name") @PathVariable(value = "config") String configName) {
-
+		@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+		@RequestBody(required = true) String payload,
+		@ApiParam(value = "Configuration name") @PathVariable(value = "config") String configName
+	) {
 		ObjectMapper mapper = new ObjectMapper();
 		HttpStatus returnStatus = HttpStatus.OK;
 		Map<String, Object> log = MessageHelper.initializeLog(MessageHelper.METHOD_UPSERTCONFIG, configName);
@@ -850,8 +973,19 @@ public class IndexingController {
 		}
 	}
 
-	@PreAuthorize("!@authz.isSecured() or #oauth2.hasScope('indexing.'.concat(#configName)) or #configName.startsWith('public-')")
-	@RequestMapping(value = "config/{config}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+	@PreAuthorize(
+		"!@authz.isSecured()"
+		+ " or #configName.startsWith('public-')"
+		+ " or #oauth2.hasScope('fdns.indexing.'.concat(#configName).concat('.read'))"
+		+ " or #oauth2.hasScope('fdns.indexing.'.concat(#configName).concat('.*'))"
+		+ " or #oauth2.hasScope('fdns.indexing.*.read')"
+		+ " or #oauth2.hasScope('fdns.indexing.*.*')"
+	)
+	@RequestMapping(
+		value = "config/{config}",
+		method = RequestMethod.GET,
+		produces = MediaType.APPLICATION_JSON_VALUE
+	)
 	@ApiOperation(value = "Get configuration", notes = "Get configuration")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Returns configuration"),
@@ -862,11 +996,10 @@ public class IndexingController {
 	})
 	@ResponseBody
 	public ResponseEntity<?> getConfig(
-			@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
-			@ApiParam(value = "Configuration name") @PathVariable(value = "config") String configName) {
-
+		@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+		@ApiParam(value = "Configuration name") @PathVariable(value = "config") String configName
+	) {
 		ObjectMapper mapper = new ObjectMapper();
-
 		Map<String, Object> log = MessageHelper.initializeLog(MessageHelper.METHOD_GETCONFIG, configName);
 
 		try {
@@ -889,8 +1022,18 @@ public class IndexingController {
 
 	}
 
-	@PreAuthorize("!@authz.isSecured() or #oauth2.hasScope('indexing.'.concat(#configName)) or #configName.startsWith('public-')")
-	@RequestMapping(value = "config/{config}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@PreAuthorize(
+		"!@authz.isSecured()"
+		+ " or #oauth2.hasScope('fdns.indexing.'.concat(#configName).concat('.delete'))"
+		+ " or #oauth2.hasScope('fdns.indexing.'.concat(#configName).concat('.*'))"
+		+ " or #oauth2.hasScope('fdns.indexing.*.delete')"
+		+ " or #oauth2.hasScope('fdns.indexing.*.*')"
+	)
+	@RequestMapping(
+		value = "config/{config}",
+		method = RequestMethod.DELETE,
+		produces = MediaType.APPLICATION_JSON_VALUE
+	)
 	@ApiOperation(value = "Delete configuration", notes = "Delete configuration")
 	@ApiResponses(value = {
 			@ApiResponse(code = 200, message = "Configuration deleted"),
@@ -901,11 +1044,10 @@ public class IndexingController {
 	})
 	@ResponseBody
 	public ResponseEntity<?> deleteConfig(
-			@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
-			@ApiParam(value = "Configuration name") @PathVariable(value = "config") String configName) {
-
+		@ApiIgnore @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
+		@ApiParam(value = "Configuration name") @PathVariable(value = "config") String configName
+	) {
 		ObjectMapper mapper = new ObjectMapper();
-
 		Map<String, Object> log = MessageHelper.initializeLog(MessageHelper.METHOD_DELETECONFIG, configName);
 
 		try {

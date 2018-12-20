@@ -50,7 +50,7 @@ import org.springframework.web.client.HttpClientErrorException;
 		"elastic.host=elastic",
 		"elastic.port=9200",
 		"elastic.protocol=http",
-		"proxy.hostname=localhost",
+		"proxy.hostname=",
 		"security.oauth2.resource.user-info-uri=",
 		"security.oauth2.protected=",
 		"security.oauth2.client.client-id=",
