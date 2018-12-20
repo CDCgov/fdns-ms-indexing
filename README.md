@@ -62,7 +62,7 @@ This microservice is designed to be used with other microservices. Please look a
 
 This microservice is configurable so that it can be secured via an OAuth 2 provider.
 
-__Scopes__: This application uses the following scope: `indexing.*`
+__Scopes__: This application uses the following scope: `fdns.indexing.{config}.{create|read|update|delete}`. Example: `fdns.indexing.myconfig.read`
 
 Please see the following environment variables for configuring with your OAuth 2 provider:
 
