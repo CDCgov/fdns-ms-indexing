@@ -78,7 +78,7 @@ public class OAuth2Test {
 		HttpEntity<String> request = new HttpEntity<String>("{}", headers);
 
 		ResponseEntity<String> response = this.restTemplate.exchange(
-			baseUrlPath + "config/myconfig",
+			baseUrlPath + "config/anotherconfig",
 			HttpMethod.POST,
 			request, 
 			String.class
